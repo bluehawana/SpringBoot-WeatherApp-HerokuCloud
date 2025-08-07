@@ -52,6 +52,33 @@ public class WeatherController {
         }
     }
 
+    @GetMapping("/weather/ascii-art")
+    public ResponseEntity<String> getWeatherAscii(@RequestParam String city) {
+        try {
+            WeatherInfo weatherInfo = weatherAPIClient.fetchWeather(city.trim());
+            if (weatherInfo != null) {
+                String asciiArt = cityLandmarkService.getWeatherIcon(weatherInfo.getDescription());
+                return ResponseEntity.ok().body(asciiArt);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Weather data not found");
+            }
+        } catch (Exception e) {
+            log.error("Error fetching ASCII weather for city: {}", city, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving ASCII weather");
+        }
+    }
+
+    @GetMapping("/weather/city-landmark")
+    public ResponseEntity<String> getCityLandmark(@RequestParam String city) {
+        try {
+            String landmark = cityLandmarkService.getCityIcon(city);
+            return ResponseEntity.ok().body(landmark);
+        } catch (Exception e) {
+            log.error("Error fetching landmark for city: {}", city, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving landmark");
+        }
+    }
+
     private String buildHtml(String city, WeatherInfo weatherInfo) {
         StringBuilder sb = new StringBuilder();
         

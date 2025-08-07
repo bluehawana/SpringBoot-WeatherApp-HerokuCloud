@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Anywhere - Simple</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #fff;
+            color: #000;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        input[type="text"] {
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #000;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            width: 200px;
+        }
+        button {
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #000;
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover {
+            background-color: #000;
+            color: #fff;
+        }
+        #weather-result {
+            margin-top: 20px;
+            white-space: pre-line;
+        }
+        .ascii-art {
+            color: #000;
+            font-family: 'Courier New', monospace;
+            line-height: 1;
+        }
+        .landmark {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Anywhere</h1>
+        <p>Enter the name of a city to get the current weather information.</p>
+        <p>Your input will be searched online with latitude and longitude by the name of your input city.</p>
+        
+        <div>
+            <label for="city-input">Enter a city: </label>
+            <input type="text" id="city-input" placeholder="tianjin" />
+            <button onclick="getWeather()">Get Weather</button>
+        </div>
+        
+        <div id="weather-result"></div>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const city = document.getElementById('city-input').value.trim();
+            if (!city) {
+                alert('Please enter a city name');
+                return;
+            }
+
+            const resultDiv = document.getElementById('weather-result');
+            resultDiv.innerHTML = 'Loading...';
+
+            try {
+                // Get basic weather data
+                const weatherResponse = await fetch(`/weather?city=${encodeURIComponent(city)}`);
+                if (!weatherResponse.ok) {
+                    throw new Error('Weather data not found');
+                }
+                const weatherHtml = await weatherResponse.text();
+                
+                // Get ASCII weather symbol
+                const asciiResponse = await fetch(`/weather/ascii-art?city=${encodeURIComponent(city)}`);
+                let asciiArt = '';
+                if (asciiResponse.ok) {
+                    asciiArt = await asciiResponse.text();
+                }
+                
+                // Get OpenAI landmark
+                const landmarkResponse = await fetch(`/weather/city-landmark?city=${encodeURIComponent(city)}`);
+                let landmark = '';
+                if (landmarkResponse.ok) {
+                    landmark = await landmarkResponse.text();
+                }
+
+                // Display results in console style
+                resultDiv.innerHTML = `
+                    <div>${weatherHtml}</div>
+                    ${asciiArt ? `<div class="ascii-art">${asciiArt}</div>` : ''}
+                    ${landmark ? `<div class="landmark"><h3>City Landmark:</h3>${landmark}</div>` : ''}
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('city-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getWeather();
+            }
+        });
+    </script>
+</body>
+</html>
